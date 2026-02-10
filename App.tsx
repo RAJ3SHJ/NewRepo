@@ -6,6 +6,7 @@ import { generateSolvableShuffle, createPieces } from './services/puzzleLogic';
 import Onboarding from './components/Onboarding';
 import Menu from './components/Menu';
 import GameView from './components/GameView';
+import { MountainSnow } from 'lucide-react';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>(View.ONBOARDING);
@@ -84,9 +85,9 @@ const App: React.FC = () => {
       <header className="fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-50 pointer-events-none">
         <div className="flex items-center gap-2 pointer-events-auto">
           <div className={`w-8 h-8 ${currentTheme.button} rounded-full flex items-center justify-center text-white shadow-lg`}>
-            <span className="text-sm font-bold">GS</span>
+            <MountainSnow size={16} />
           </div>
-          <h1 className="text-xl font-black tracking-tight select-none">GeoSlide</h1>
+          <h1 className="text-xl font-black tracking-tight select-none">Iceberg</h1>
         </div>
       </header>
 

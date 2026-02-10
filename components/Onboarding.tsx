@@ -28,7 +28,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, initialName, theme 
         <div className={`w-24 h-24 ${themeColors.button} rounded-2xl mx-auto flex items-center justify-center shadow-2xl rotate-6 ring-8 ring-white/50`}>
             <span className="text-4xl">🧩</span>
         </div>
-        <h2 className="text-5xl font-black tracking-tight">GeoSlide</h2>
+        <h2 className="text-5xl font-black tracking-tight">Iceberg</h2>
         <p className="opacity-60 max-w-xs mx-auto font-medium">
           The ultimate square sliding puzzle experience.
         </p>

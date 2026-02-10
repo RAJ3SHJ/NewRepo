@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Difficulty, ThemeType } from '../types';
-import { DEFAULT_IMAGES, THEME_CONFIG } from '../constants';
-import { Settings2, Palette, Sparkles, Loader2, X, Search, Check, ArrowLeft } from 'lucide-react';
+import { DEFAULT_IMAGES, THEME_CONFIG, GRID_CONFIG } from '../constants';
+import { Settings2, Palette, Sparkles, Loader2, X, Search, Check, ArrowLeft, Play } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 interface MenuProps {
@@ -31,6 +31,7 @@ const Menu: React.FC<MenuProps> = ({
   const [aiPreviewImage, setAiPreviewImage] = useState<string | null>(null);
 
   const themeColors = THEME_CONFIG[currentTheme];
+  const gridSize = GRID_CONFIG[difficulty];
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,7 +58,7 @@ const Menu: React.FC<MenuProps> = ({
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {
-          parts: [{ text: `A high-quality, professional photography of ${aiPrompt}. Square aspect ratio, centered subject, highly detailed, vivid lighting.` }],
+          parts: [{ text: `A high-quality, vibrant photography of ${aiPrompt}. Square aspect ratio, centered subject, highly detailed.` }],
         },
         config: {
           imageConfig: {
@@ -104,12 +105,34 @@ const Menu: React.FC<MenuProps> = ({
 
   const themeKeys: ThemeType[] = ['ice-blue', 'ice-green', 'ice-pink', 'ice-purple', 'classic'];
 
+  // Helper to render the tiled preview
+  const TiledPreview = useMemo(() => {
+    const totalTiles = gridSize * gridSize;
+    const tiles = [];
+    for (let i = 0; i < totalTiles; i++) {
+        const r = Math.floor(i / gridSize);
+        const c = i % gridSize;
+        tiles.push(
+            <div 
+                key={i}
+                className="w-full h-full bg-cover rounded-[10%] shadow-sm border border-white/20"
+                style={{
+                    backgroundImage: `url(${selectedImage})`,
+                    backgroundSize: `${gridSize * 100}%`,
+                    backgroundPosition: `${(c / (gridSize - 1)) * 100}% ${(r / (gridSize - 1)) * 100}%`,
+                }}
+            />
+        );
+    }
+    return tiles;
+  }, [selectedImage, gridSize]);
+
   return (
     <div className="space-y-8 max-w-2xl mx-auto py-4">
       <div className="flex justify-between items-center px-2">
         <div className="text-left">
-          <h2 className="text-3xl font-black tracking-tight">GeoSlide</h2>
-          <p className="opacity-60 text-sm font-medium">Player: {userName} • {difficulty} Mode</p>
+          <h2 className="text-3xl font-black tracking-tight">Iceberg</h2>
+          <p className="opacity-60 text-sm font-medium">Welcome, {userName}</p>
         </div>
         <button 
             onClick={() => setShowSettings(!showSettings)}
@@ -120,7 +143,7 @@ const Menu: React.FC<MenuProps> = ({
       </div>
 
       {showSettings && (
-        <section className={`p-6 rounded-3xl border-2 transition-colors animate-in slide-in-from-top-4 duration-300 space-y-6 bg-white shadow-xl ${currentTheme === 'classic' ? 'border-gray-100' : 'border-current opacity-90'}`}
+        <section className={`p-6 rounded-[2rem] border-2 transition-colors animate-in slide-in-from-top-4 duration-300 space-y-6 bg-white shadow-xl ${currentTheme === 'classic' ? 'border-gray-100' : 'border-current opacity-90'}`}
                  style={{ borderColor: currentTheme !== 'classic' ? 'rgba(0,0,0,0.05)' : undefined }}>
             <div className="space-y-3">
                 <h3 className="text-lg font-black flex items-center gap-2">
@@ -153,7 +176,7 @@ const Menu: React.FC<MenuProps> = ({
                         key={tk}
                         onClick={() => onThemeChange(tk)}
                         className={`py-2 px-1 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
-                            currentTheme === tk ? themeColors.button.replace('bg-', 'border-') : 'border-transparent bg-gray-50'
+                            currentTheme === tk ? THEME_CONFIG[tk].button.replace('bg-', 'border-') : 'border-transparent bg-gray-50'
                         }`}
                     >
                         <div className={`w-6 h-6 rounded-full shadow-inner ${THEME_CONFIG[tk].accent}`} />
@@ -165,40 +188,55 @@ const Menu: React.FC<MenuProps> = ({
         </section>
       )}
 
-      <section className="space-y-6">
-        <h3 className="text-xl font-black px-2 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-                <span className={`w-8 h-8 rounded-full ${themeColors.accent} ${themeColors.text} flex items-center justify-center text-sm font-black`}>1</span>
-                Image Selection
+      {/* Hero Preview - The "Game Slide" Look */}
+      <section className="relative group animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+          <div className={`absolute -inset-2 ${themeColors.accent} opacity-20 blur-2xl rounded-[3rem] group-hover:opacity-30 transition-opacity`} />
+          <div className="relative bg-white p-4 rounded-[2.5rem] shadow-2xl border border-white/50 overflow-hidden">
+            <div 
+                className="grid gap-1.5 aspect-square w-full"
+                style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}
+            >
+                {TiledPreview}
             </div>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setShowAIModal(true)}
-                className={`text-xs font-bold ${themeColors.text} bg-white px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all border border-gray-100`}
-              >
-                <Sparkles size={12} />
-                AI Generate
-              </button>
-              <label className={`text-xs font-bold ${themeColors.text} cursor-pointer hover:underline ${themeColors.accent} px-3 py-1.5 rounded-full`}>
-                  Upload
-                  <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-              </label>
+            
+            <div className="mt-4 flex items-center justify-between px-2">
+                <div>
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-30 block">Live Preview</span>
+                    <span className="text-sm font-bold opacity-60">{difficulty} • {gridSize}x{gridSize} Board</span>
+                </div>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => setShowAIModal(true)}
+                        className="p-3 bg-amber-50 text-amber-600 rounded-2xl hover:bg-amber-100 transition-colors shadow-sm"
+                        title="AI Search"
+                    >
+                        <Sparkles size={18} />
+                    </button>
+                    <label className="p-3 bg-sky-50 text-sky-600 rounded-2xl hover:bg-sky-100 transition-colors shadow-sm cursor-pointer">
+                        <Play className="rotate-90" size={18} />
+                        <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                    </label>
+                </div>
             </div>
-        </h3>
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] opacity-40 px-2">Quick Select</h3>
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
           {DEFAULT_IMAGES.map((img, i) => (
             <button
               key={i}
               onClick={() => setSelectedImage(img)}
-              className={`aspect-square rounded-2xl overflow-hidden border-4 transition-all ${
-                selectedImage === img ? themeColors.button.replace('bg-', 'border-') + ' scale-105 shadow-xl' : 'border-transparent opacity-60 hover:opacity-100'
+              className={`aspect-square rounded-xl overflow-hidden border-4 transition-all hover:scale-105 ${
+                selectedImage === img ? themeColors.button.replace('bg-', 'border-') + ' shadow-lg scale-110' : 'border-white opacity-40 hover:opacity-100 shadow-sm'
               }`}
             >
               <img src={img} alt="Gallery item" className="w-full h-full object-cover" />
             </button>
           ))}
           {!DEFAULT_IMAGES.includes(selectedImage) && (
-            <div className={`aspect-square rounded-2xl overflow-hidden border-4 ${themeColors.button.replace('bg-', 'border-')} scale-105 relative shadow-xl`}>
+            <div className={`aspect-square rounded-xl overflow-hidden border-4 ${themeColors.button.replace('bg-', 'border-')} shadow-lg scale-110`}>
                 <img src={selectedImage} alt="Custom upload" className="w-full h-full object-cover" />
             </div>
           )}
@@ -207,9 +245,10 @@ const Menu: React.FC<MenuProps> = ({
 
       <button
         onClick={() => onStart(selectedImage)}
-        className={`w-full py-6 ${themeColors.button} text-white rounded-3xl font-black text-xl shadow-2xl transition-all active:scale-[0.98] mt-4`}
+        className={`w-full py-6 ${themeColors.button} text-white rounded-[2.5rem] font-black text-xl shadow-2xl transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-3`}
       >
-        Start
+        <Play fill="white" size={24} />
+        Start Puzzle
       </button>
 
       {/* AI Search Modal */}
@@ -295,12 +334,6 @@ const Menu: React.FC<MenuProps> = ({
                   </button>
                 </div>
               </div>
-            )}
-
-            {!aiPreviewImage && (
-              <p className="text-[10px] text-center opacity-40 font-medium px-4">
-                Tip: Use descriptive words for better results. The AI works best with clear subjects.
-              </p>
             )}
           </div>
         </div>
