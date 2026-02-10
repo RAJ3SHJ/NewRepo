@@ -1,0 +1,7 @@
+{
+  "name": "Tile Puzzle",
+  "description": "A sophisticated sliding tile puzzle game supporting multiple geometric boundaries (Circle, Triangle, Hexagon) and custom image uploads, featuring a mathematically guaranteed solvable shuffling algorithm.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
